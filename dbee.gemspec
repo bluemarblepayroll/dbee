@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('pry', '~>0')
   s.add_development_dependency('rake', '~> 12')
   s.add_development_dependency('rspec')
-  s.add_development_dependency('rubocop', '~>0.74.0')
+  s.add_development_dependency('rubocop', '~>0.75.0')
   s.add_development_dependency('simplecov', '~>0.17.0')
   s.add_development_dependency('simplecov-console', '~>0.5.0')
 end
