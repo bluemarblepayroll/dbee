@@ -1,5 +1,17 @@
-Metrics/LineLength:
+AllCops:
+  TargetRubyVersion: 2.5
+
+Layout/LineLength:
   Max: 100
+
+Lint/RaiseException:
+  Enabled: True
+
+Lint/StructNewOverride:
+  Enabled: True
+
+Metrics/AbcSize:
+  Max: 16
 
 Metrics/BlockLength:
   ExcludedMethods:
@@ -10,14 +22,17 @@ Metrics/BlockLength:
     - specify
     - define
 
+Metrics/ClassLength:
+  Max: 125
+
 Metrics/MethodLength:
   Max: 25
 
-AllCops:
-  TargetRubyVersion: 2.5
+Style/HashEachMethods:
+  Enabled: True
 
-Metrics/AbcSize:
-  Max: 16
+Style/HashTransformKeys:
+  Enabled: True
 
-Metrics/ClassLength:
-  Max: 125
+Style/HashTransformValues:
+  Enabled: True
