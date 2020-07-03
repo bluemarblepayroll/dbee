@@ -10,6 +10,31 @@
 require 'spec_helper'
 
 describe Dbee::Query::Field do
+  let(:config) do
+    {
+      display: 'd',
+      key_path: 'a.b.c'
+    }
+  end
+
+  let(:config_with_aggregation_and_filters) do
+    config.merge(
+      aggregator: :ave,
+      filters: [
+        {
+          key_path: 'a.b',
+          value: 'something'
+        }
+      ]
+    )
+  end
+
+  subject { described_class.new(config_with_aggregation_and_filters) }
+
+  let(:subject_without_aggregation_and_filters) do
+    described_class.new(config)
+  end
+
   it 'should act as hashable' do
     expect(described_class).to respond_to(:make)
     expect(described_class).to respond_to(:array)
@@ -24,16 +49,19 @@ describe Dbee::Query::Field do
   end
 
   context 'equality' do
-    let(:config) { { key_path: 'a.b.c', display: 'd' } }
+    specify '#hash produces same output as [aggregator, key_path, and display]' do
+      expected = [
+        subject.aggregator,
+        subject.display,
+        subject.filters,
+        subject.key_path
+      ].hash
 
-    subject { described_class.new(config) }
-
-    specify '#hash produces same output as concatenated string hash of key_path and display' do
-      expect(subject.hash).to eq("#{config[:key_path]}#{config[:display]}".hash)
+      expect(subject.hash).to eq(expected)
     end
 
     specify '#== and #eql? compare attributes' do
-      object2 = described_class.new(config)
+      object2 = described_class.new(config_with_aggregation_and_filters)
 
       expect(subject).to eq(object2)
       expect(subject).to eql(object2)
@@ -42,6 +70,26 @@ describe Dbee::Query::Field do
     it 'returns false unless comparing same object types' do
       expect(subject).not_to eq('a.b.c')
       expect(subject).not_to eq(nil)
+    end
+  end
+
+  describe '#aggregator?' do
+    it 'returns true if not nil' do
+      expect(subject.aggregator?).to be true
+    end
+
+    it 'returns false if nil' do
+      expect(subject_without_aggregation_and_filters.aggregator?).to be false
+    end
+  end
+
+  describe '#filters?' do
+    it 'returns true if at least one filter' do
+      expect(subject.filters?).to be true
+    end
+
+    it 'returns false if nil' do
+      expect(subject_without_aggregation_and_filters.filters?).to be false
     end
   end
 end

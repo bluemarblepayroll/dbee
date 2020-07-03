@@ -407,6 +407,129 @@ sql = Dbee.sql(model, query, provider)
 
 The above examples showed how to use a plugin provider, see the plugin provider's documentation for more information about its options and use.
 
+#### Aggregation
+
+Fields can be configured to use aggregation by setting its `aggregator` attribute.  For example, say we wanted to count the number of patients per practice:
+
+**Data Model**:
+
+````yaml
+name: practice
+models:
+  - name: patients
+    constraints:
+      - type: reference
+        name: practice_id
+        parent: id
+````
+
+**Query**:
+
+````ruby
+query = {
+  fields: [
+    {
+      key_path: 'id',
+      display: 'Practice ID #',
+    },
+    {
+      key_path: 'name',
+      display: 'Practice Name',
+    },
+    {
+      key_path: 'patients.id',
+      display: 'Total Patients',
+      aggregator: :count
+    },
+  ]
+````
+
+An example of a materialized result would be something akin to:
+
+Practice ID # | Practice Name   | Total Patients
+------------- | --------------- | --------------
+1             | Families Choice | 293
+2             | Awesome Choice  | 2305
+3             | Best Value      | 1200
+
+A complete list of aggregator values can be found by inspecting the `Dbee::Query::Field::Aggregator` constant.
+
+#### Field/Column Level Filtering & Pivoting
+
+Fields can also have filters which provide post-filtering (on the select-level instead of at query-level.)  This can be used in conjunction with aggregate functions to provide pivoting.  For example:
+
+**Data/Schema Example**:
+
+patients:
+
+id | first | last
+-- | ----- | -----
+1  | frank | rizzo
+
+patient_fields:
+
+id | patient_id | key             | value
+-- | ---------- | --------------- | -----
+1  | 1          | dob             | 1900-01-01
+2  | 1          | drivers_license | ABC123
+
+**Model Configuration**:
+
+````yaml
+name: patients
+models:
+  - name: patient_fields
+    constraints:
+      - type: reference
+        parent: id
+        name: patient_id
+````
+
+**Query**:
+
+````ruby
+query = {
+  fields: [
+    {
+      key_path: 'id',
+      display: 'ID #'
+    },
+    {
+      key_path: 'first',
+      display: 'First Name'
+    },
+    {
+      aggregator: :max,
+      key_path: 'patient_fields.value',
+      display: 'Date of Birth',
+      filters: [
+        {
+          key_path: 'patient_fields.key',
+          value: 'dob'
+        }
+      ]
+    },
+    {
+      aggregator: :max,
+      key_path: 'patient_fields.value',
+      display: 'Drivers License #',
+      filters: [
+        {
+          key_path: 'patient_fields.key',
+          value: 'drivers_license'
+        }
+      ]
+    }
+  }
+}
+````
+
+Executing the query above against the data and model would yield:
+
+ID # | First Name | Date of Birth | Drivers License #
+--   | ---------- | ------------- | -----------------
+1    | frank      | 1900-01-01    | ABC123
+
 
 ## Contributing
 

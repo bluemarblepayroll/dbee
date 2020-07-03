@@ -25,10 +25,8 @@ module Dbee
 
     attr_reader :fields, :filters, :limit, :sorters
 
-    def_delegator :fields, :sort, :sorted_fields
-
+    def_delegator :fields,  :sort, :sorted_fields
     def_delegator :filters, :sort, :sorted_filters
-
     def_delegator :sorters, :sort, :sorted_sorters
 
     def initialize(fields:, filters: [], limit: nil, sorters: [])

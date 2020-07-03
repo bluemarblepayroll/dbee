@@ -15,13 +15,21 @@ Gem::Specification.new do |s|
   s.email       = ['mruggio@bluemarblepayroll.com']
   s.files       = `git ls-files`.split("\n")
   s.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
+  s.bindir      = 'exe'
+  s.executables = []
   s.homepage    = 'https://github.com/bluemarblepayroll/dbee'
   s.license     = 'MIT'
+  s.metadata    = {
+    'bug_tracker_uri' => 'https://github.com/bluemarblepayroll/dbee/issues',
+    'changelog_uri' => 'https://github.com/bluemarblepayroll/dbee/blob/master/CHANGELOG.md',
+    'documentation_uri' => 'https://www.rubydoc.info/gems/dbee',
+    'homepage_uri' => s.homepage,
+    'source_code_uri' => s.homepage
+  }
 
-  s.required_ruby_version = '>= 2.3.8'
+  s.required_ruby_version = '>= 2.5'
 
-  s.add_dependency('acts_as_hashable', '~>1', '>=1.1.0')
+  s.add_dependency('acts_as_hashable', '~>1', '>=1.2.0')
   s.add_dependency('dry-inflector', '~>0')
 
   s.add_development_dependency('guard-rspec', '~>4.7')

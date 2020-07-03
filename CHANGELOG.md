@@ -1,3 +1,14 @@
+# 2.1.0 (TBD)
+
+### Additions:
+
+* Added Dbee::Query::Field#aggregator (such as ave, min, max, sum, etc.)
+* Added Dbee::Query::Field#filters (allows for doing select column filtering)
+
+### Changes:
+
+* Bumped minimum Ruby version to 2.5
+
 # 2.0.3 (January 7th, 2020)
 
 ### Fixes:

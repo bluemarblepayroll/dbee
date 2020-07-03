@@ -15,24 +15,55 @@ module Dbee
     class Field
       acts_as_hashable
 
-      attr_reader :key_path, :display
+      module Aggregator
+        AVE   = :ave
+        COUNT = :count
+        MAX   = :max
+        MIN   = :min
+        SUM   = :sum
+      end
+      include Aggregator
 
-      def initialize(key_path:, display: nil)
+      attr_reader :aggregator, :display, :filters, :key_path
+
+      def initialize(
+        aggregator: nil,
+        display: nil,
+        filters: [],
+        key_path:
+      )
         raise ArgumentError, 'key_path is required' if key_path.to_s.empty?
 
-        @key_path = KeyPath.get(key_path)
-        @display = (display.to_s.empty? ? key_path : display).to_s
+        @aggregator = aggregator ? Aggregator.const_get(aggregator.to_s.upcase.to_sym) : nil
+        @display    = (display.to_s.empty? ? key_path : display).to_s
+        @filters    = Filters.array(filters).uniq
+        @key_path   = KeyPath.get(key_path)
 
         freeze
       end
 
+      def filters?
+        filters.any?
+      end
+
+      def aggregator?
+        !aggregator.nil?
+      end
+
       def hash
-        "#{key_path}#{display}".hash
+        [
+          aggregator,
+          display,
+          filters,
+          key_path
+        ].hash
       end
 
       def ==(other)
         other.instance_of?(self.class) &&
+          other.aggregator == aggregator &&
           other.key_path == key_path &&
+          other.filters == filters &&
           other.display == display
       end
       alias eql? ==
