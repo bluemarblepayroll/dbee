@@ -23,13 +23,24 @@ module Dbee
 
     class NoFieldsError < StandardError; end
 
-    attr_reader :fields, :filters, :limit, :sorters
+    attr_reader :fields,
+                :filters,
+                :groupers,
+                :limit,
+                :sorters
 
-    def_delegator :fields,  :sort, :sorted_fields
-    def_delegator :filters, :sort, :sorted_filters
-    def_delegator :sorters, :sort, :sorted_sorters
+    def_delegator :fields,   :sort, :sorted_fields
+    def_delegator :filters,  :sort, :sorted_filters
+    def_delegator :sorters,  :sort, :sorted_sorters
+    def_delegator :groupers, :sort, :sorted_groupers
 
-    def initialize(fields:, filters: [], limit: nil, sorters: [])
+    def initialize(
+      fields:,
+      filters: [],
+      groupers: [],
+      limit: nil,
+      sorters: []
+    )
       @fields = Field.array(fields)
 
       # If no fields were passed into a query then we will have no data to return.
@@ -38,6 +49,7 @@ module Dbee
       raise NoFieldsError if @fields.empty?
 
       @filters  = Filters.array(filters).uniq
+      @groupers = Array(groupers).map { |k| KeyPath.get(k) }.uniq
       @limit    = limit.to_s.empty? ? nil : limit.to_i
       @sorters  = Sorters.array(sorters).uniq
 
@@ -46,10 +58,10 @@ module Dbee
 
     def ==(other)
       other.instance_of?(self.class) &&
+        other.limit == limit &&
         other.sorted_fields == sorted_fields &&
         other.sorted_filters == sorted_filters &&
-        other.sorted_sorters == sorted_sorters &&
-        other.limit == limit
+        other.sorted_sorters == sorted_sorters
     end
     alias eql? ==
 
@@ -60,7 +72,11 @@ module Dbee
     private
 
     def key_paths
-      (fields.map(&:key_path) + filters.map(&:key_path) + sorters.map(&:key_path))
+      (
+        fields.flat_map(&:key_paths) +
+        filters.map(&:key_path) +
+        sorters.map(&:key_path)
+      )
     end
   end
 end

@@ -71,6 +71,10 @@ module Dbee
       def <=>(other)
         "#{key_path}#{display}" <=> "#{other.key_path}#{other.display}"
       end
+
+      def key_paths
+        [key_path] + filters.map(&:key_path)
+      end
     end
   end
 end
