@@ -235,7 +235,7 @@ It is up to you to determine which modeling technique to use as both are equival
 
 #### Table Partitioning
 
-You can leverage the model partitioners for hard-coding partitioning by column=value.  The initial use-case for this was to mirror how ActiveRecord deals with (Single Table Inheritance)[https://api.rubyonrails.org/v6.0.0/classes/ActiveRecord/Base.html#class-ActiveRecord::Base-label-Single+table+inheritance].  Here is a basic example of how to partition an `animals` table for different subclasses:
+You can leverage the model partitioners for hard-coding partitioning by column=value.  The initial use-case for this was to mirror how ActiveRecord deals with [Single Table Inheritance](https://api.rubyonrails.org/v6.0.0/classes/ActiveRecord/Base.html#class-ActiveRecord::Base-label-Single+table+inheritance).  Here is a basic example of how to partition an `animals` table for different subclasses:
 
 ##### Code-first:
 
