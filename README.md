@@ -377,7 +377,7 @@ query    = {}
 sql      = Dbee.sql(Practice, query, provider)
 ````
 
-It equivalent to saying: `SELECT practices.* FROM practices`.  This helps to establish a deterministic base-case: it returns the same implicit columns that is independent of sql joins (sorters and/or filters may require sql joins.)
+It equivalent to saying: `SELECT practices.* FROM practices`.  This helps to establish a deterministic base-case: it returns the same implicit columns that is independent of SQL joins (sorters and/or filters may require SQL joins.)
 
 ##### Code-First Execution
 
