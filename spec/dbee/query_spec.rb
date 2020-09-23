@@ -115,7 +115,55 @@ describe Dbee::Query do
     end
   end
 
-  context 'README examples' do
+  describe 'nesting/subqueries' do
+    describe 'given three levels of queries' do
+      let(:outer_query) do
+        {
+          given: [inner_query1, inner_query2],
+          fields: [{ key_path: :outer_field }]
+        }
+      end
+      let(:inner_query1) { { name: :inner_query1, fields: [{ key_path: :inner1_field }] } }
+      let(:inner_query2) do
+        {
+          given: [third_level_query],
+          name: :inner_query2,
+          fields: [{ key_path: :inner2_field }]
+        }
+      end
+      let(:third_level_query) do
+        { name: :third_level_query, fields: [{ key_path: :third_level_field }] }
+      end
+
+      it 'exposes subqueries through the "given" method' do
+        subject = described_class.make(outer_query)
+
+        second_level_queries = subject.given
+        expect(second_level_queries.size).to eq 2
+        expect(second_level_queries[0].name).to eq :inner_query1
+        expect(second_level_queries[1].name).to eq :inner_query2
+
+        third_level_queries = second_level_queries[1].given
+        expect(third_level_queries[0].name).to eq :third_level_query
+        # The tree ends here:
+        expect(third_level_queries[0].given).to eq []
+      end
+    end
+
+    describe 'given a subquery without a name' do
+      let(:no_name_inner_query) { {} }
+      let(:outer_query) { { given: [no_name_inner_query] } }
+
+      it 'raises an error' do
+        expect { described_class.make(outer_query) }.to raise_error(
+          ActsAsHashable::Hashable::HydrationError,
+          /name is required for subqueries/
+        )
+      end
+    end
+  end
+
+  context 'README examples do not produce errors' do
     EXAMPLES = {
       'Get all practices' => {
         fields: [
