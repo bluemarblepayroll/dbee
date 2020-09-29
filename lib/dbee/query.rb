@@ -12,7 +12,8 @@ require_relative 'query/filters'
 require_relative 'query/sorters'
 
 module Dbee
-  # This class is an abstration of a simplified SQL expression.  In DB terms:
+  # This class is an abstraction of a simplified SQL expression.  In DB terms:
+  # TODO: add to this
   # - fields are the SELECT
   # - sorters are the ORDER BY
   # - limit is the TAKE
@@ -21,10 +22,12 @@ module Dbee
     extend Forwardable
     acts_as_hashable
 
-    attr_reader :fields,
+    attr_reader :constraints,
+                :fields,
                 :filters,
                 :given,
                 :limit,
+                :model,
                 :name,
                 :sorters
 
@@ -32,30 +35,23 @@ module Dbee
     def_delegator :filters,  :sort, :sorted_filters
     def_delegator :sorters,  :sort, :sorted_sorters
 
-    # rubocop:disable Metrics/ParameterLists
-    # TODO: address this before PR
-    def initialize(
-      fields: [],
-      filters: [],
-      given: [],
-      limit: nil,
-      name: nil,
-      parent: nil,
-      sorters: []
-    )
-      # rubocop:enable Metrics/ParameterLists
-      @fields  = Field.array(fields)
-      @filters = Filters.array(filters).uniq
-      populate_given(given)
-      @name    = name
-      @limit   = limit.to_s.empty? ? nil : limit.to_i
-      @parent  = parent
-      @sorters = Sorters.array(sorters).uniq
+    # rubocop:disable Metrics/AbcSize
+    # TODO:  extract a sub-class for subqueries.
+    def initialize(attrs)
+      attrs = CONSTRUCTOR_DEFAULTS.merge(attrs)
 
-      raise ArgumentError, 'a name is required for subqueries' if subquery? && name.nil?
+      @fields  = Field.array(attrs[:fields])
+      @filters = Filters.array(attrs[:filters]).uniq
+      populate_given(attrs[:given])
+      @limit   = attrs[:limit].to_s.empty? ? nil : attrs[:limit].to_i
+      @parent  = attrs[:parent]
+      @sorters = Sorters.array(attrs[:sorters]).uniq
+
+      populate_and_validate_subquery_attrs(attrs) if subquery?
 
       freeze
     end
+    # rubocop:enable Metrics/AbcSize
 
     def ==(other)
       other.instance_of?(self.class) &&
@@ -76,6 +72,17 @@ module Dbee
 
     private
 
+    CONSTRUCTOR_DEFAULTS = {
+      fields: [],
+      filters: [],
+      given: [],
+      limit: nil,
+      name: nil,
+      parent: nil,
+      sorters: []
+    }.freeze
+    private_constant :CONSTRUCTOR_DEFAULTS
+
     attr_reader :parent
 
     def key_paths
@@ -88,6 +95,13 @@ module Dbee
 
     def populate_given(given)
       @given = Array(given).map { |query_spec| self.class.new(query_spec.merge(parent: self)) }
+    end
+
+    def populate_and_validate_subquery_attrs(attrs)
+      @name = attrs[:name]
+      @model = attrs[:model]
+      raise ArgumentError, 'a name is required for subqueries' if name.nil?
+      raise ArgumentError, 'a model is required for subqueries' if model.nil?
     end
   end
 end

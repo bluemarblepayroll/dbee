@@ -123,16 +123,19 @@ describe Dbee::Query do
           fields: [{ key_path: :outer_field }]
         }
       end
-      let(:inner_query1) { { name: :inner_query1, fields: [{ key_path: :inner1_field }] } }
+      let(:inner_query1) do
+        { name: :inner_query1, model: :foo, fields: [{ key_path: :inner1_field }] }
+      end
       let(:inner_query2) do
         {
           given: [third_level_query],
+          model: :foo,
           name: :inner_query2,
           fields: [{ key_path: :inner2_field }]
         }
       end
       let(:third_level_query) do
-        { name: :third_level_query, fields: [{ key_path: :third_level_field }] }
+        { name: :third_level_query, model: :foo, fields: [{ key_path: :third_level_field }] }
       end
 
       it 'exposes subqueries through the "given" method' do
@@ -150,15 +153,36 @@ describe Dbee::Query do
       end
     end
 
-    describe 'given a subquery without a name' do
-      let(:no_name_inner_query) { {} }
-      let(:outer_query) { { given: [no_name_inner_query] } }
+    describe 'subquery validation' do
+      let(:valid_subquery) { { name: :third_level_query, model: :foo } }
+      let(:subquery) { valid_subquery }
+      let(:outer_query) { { given: [subquery] } }
+      let(:subject) { described_class.make(outer_query) }
 
-      it 'raises an error' do
-        expect { described_class.make(outer_query) }.to raise_error(
-          ActsAsHashable::Hashable::HydrationError,
-          /name is required for subqueries/
-        )
+      it 'constructs a valid subquery' do
+        expect(subject).to be_a described_class
+      end
+
+      describe 'given a subquery without a name' do
+        let(:subquery) { valid_subquery.merge(name: nil) }
+
+        it 'raises an error' do
+          expect { subject }.to raise_error(
+            ActsAsHashable::Hashable::HydrationError,
+            /name is required for subqueries/
+          )
+        end
+      end
+
+      describe 'given a subquery without a model' do
+        let(:subquery) { valid_subquery.merge(model: nil) }
+
+        it 'raises an error' do
+          expect { subject }.to raise_error(
+            ActsAsHashable::Hashable::HydrationError,
+            /model is required for subqueries/
+          )
+        end
       end
     end
   end
