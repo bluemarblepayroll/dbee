@@ -34,6 +34,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency('guard-rspec', '~>4.7')
   s.add_development_dependency('pry', '~>0')
+  s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake', '~> 13')
   s.add_development_dependency('rspec')
   s.add_development_dependency('rubocop', '~>0.89.1')

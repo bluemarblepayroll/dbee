@@ -1,6 +1,7 @@
 env:
   global:
     - CC_TEST_REPORTER_ID=e7db23dad7560a076e48357331b0362db3741b62dbdd537bc30de27fa9cab69b
+    - DISABLE_RSPEC_FOCUS=true
 language: ruby
 rvm:
   # Build on the latest stable of all supported Rubies (https://www.ruby-lang.org/en/downloads/):
