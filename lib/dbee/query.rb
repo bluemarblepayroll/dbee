@@ -102,6 +102,8 @@ module Dbee
       @model = attrs[:model]
       raise ArgumentError, 'a name is required for subqueries' if name.nil?
       raise ArgumentError, 'a model is required for subqueries' if model.nil?
+
+      @constraints = Model::Constraints.array(attrs[:constraints])
     end
   end
 end

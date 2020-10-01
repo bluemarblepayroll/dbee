@@ -117,6 +117,7 @@ describe Dbee::Query do
 
   describe 'nesting/subqueries' do
     describe 'given three levels of queries' do
+      let(:subquery_constraint) { { name: :outer_id, parent: :id, type: :reference } }
       let(:outer_query) do
         {
           given: [inner_query1, inner_query2],
@@ -131,17 +132,17 @@ describe Dbee::Query do
           given: [third_level_query],
           model: :foo,
           name: :inner_query2,
+          constraints: [subquery_constraint],
           fields: [{ key_path: :inner2_field }]
         }
       end
       let(:third_level_query) do
         { name: :third_level_query, model: :foo, fields: [{ key_path: :third_level_field }] }
       end
+      let(:subject) { described_class.make(outer_query) }
+      let(:second_level_queries) { subject.given }
 
       it 'exposes subqueries through the "given" method' do
-        subject = described_class.make(outer_query)
-
-        second_level_queries = subject.given
         expect(second_level_queries.size).to eq 2
         expect(second_level_queries[0].name).to eq :inner_query1
         expect(second_level_queries[1].name).to eq :inner_query2
@@ -150,6 +151,13 @@ describe Dbee::Query do
         expect(third_level_queries[0].name).to eq :third_level_query
         # The tree ends here:
         expect(third_level_queries[0].given).to eq []
+      end
+
+      it 'populates all of the subquery fields' do
+        subquery = second_level_queries[1]
+        expect(subquery.name).to eq(:inner_query2)
+        expect(subquery.model).to eq(:foo)
+        expect(subquery.constraints).to eq [Dbee::Model::Constraints.make(subquery_constraint)]
       end
     end
 
@@ -161,6 +169,7 @@ describe Dbee::Query do
 
       it 'constructs a valid subquery' do
         expect(subject).to be_a described_class
+        expect(subject.given.first).to be_a_subquery
       end
 
       describe 'given a subquery without a name' do
