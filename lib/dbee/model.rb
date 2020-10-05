@@ -42,6 +42,10 @@ module Dbee
     # flattened hash instead of a nested object structure.
     # The hash key will be an array of strings (model names) and the value will be the
     # identified model.
+    #
+    # Note that this method ends in a bang because it can raise a
+    # `ModelNotFoundError` exception if the model is not found. This method
+    # does not mutate any data.
     def ancestors!(parts = [], visited_parts = [], found = {})
       return found if Array(parts).empty?
 
@@ -59,6 +63,16 @@ module Dbee
 
       # Recursively call for next parts in the chain
       model.ancestors!(parts[1..-1], visited_parts, found)
+    end
+
+    def append(child_model)
+      raise ArgumentError, 'a child model is required' if child_model.nil?
+
+      child_name = child_model.name
+      raise ArgumentError, "'#{child_name}' is already a defined model" \
+        if models_by_name.key?(child_name)
+
+      models_by_name[child_name] = child_model
     end
 
     def ==(other)
