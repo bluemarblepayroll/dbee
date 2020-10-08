@@ -29,6 +29,7 @@ module Dbee
                 :limit,
                 :model,
                 :name,
+                :parent_model,
                 :sorters
 
     def_delegator :fields,   :sort, :sorted_fields
@@ -100,8 +101,10 @@ module Dbee
     def populate_and_validate_subquery_attrs(attrs)
       @name = attrs[:name]
       @model = attrs[:model]
+      @parent_model = attrs[:parent_model]
       raise ArgumentError, 'a name is required for subqueries' if name.nil?
       raise ArgumentError, 'a model is required for subqueries' if model.nil?
+      raise ArgumentError, 'a parent_model is required for subqueries' if parent_model.nil?
 
       @constraints = Model::Constraints.array(attrs[:constraints])
     end

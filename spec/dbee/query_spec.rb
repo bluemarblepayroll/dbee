@@ -125,19 +125,30 @@ describe Dbee::Query do
         }
       end
       let(:inner_query1) do
-        { name: :inner_query1, model: :foo, fields: [{ key_path: :inner1_field }] }
+        {
+          name: :inner_query1,
+          model: :foo,
+          parent_model: :parent,
+          fields: [{ key_path: :inner1_field }]
+        }
       end
       let(:inner_query2) do
         {
           given: [third_level_query],
           model: :foo,
+          parent_model: :parent,
           name: :inner_query2,
           constraints: [subquery_constraint],
           fields: [{ key_path: :inner2_field }]
         }
       end
       let(:third_level_query) do
-        { name: :third_level_query, model: :foo, fields: [{ key_path: :third_level_field }] }
+        {
+          name: :third_level_query,
+          model: :foo,
+          parent_model: :bar,
+          fields: [{ key_path: :third_level_field }]
+        }
       end
       let(:subject) { described_class.make(outer_query) }
       let(:second_level_queries) { subject.given }
@@ -162,7 +173,7 @@ describe Dbee::Query do
     end
 
     describe 'subquery validation' do
-      let(:valid_subquery) { { name: :third_level_query, model: :foo } }
+      let(:valid_subquery) { { name: :third_level_query, model: :foo, parent_model: :bar } }
       let(:subquery) { valid_subquery }
       let(:outer_query) { { given: [subquery] } }
       let(:subject) { described_class.make(outer_query) }
