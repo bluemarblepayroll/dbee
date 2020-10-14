@@ -53,6 +53,30 @@ describe Dbee::Model do
 
       expect(association_names).to eq(expected_association_names)
     end
+
+    describe 'sub types' do
+      it 'is table based by default' do
+        config = { name: 'theaters' }
+        model = described_class.make(config)
+
+        expect(model).to be_a(Dbee::Model::TableBased)
+      end
+
+      it 'is derived when the type indicates this' do
+        config = { name: 'theaters', type: :derived }
+        model = described_class.make(config)
+
+        expect(model).to be_a(Dbee::Model::Derived)
+      end
+
+      # Not sure if acts_as_hashable_factory can support this...
+      pending 'is derived when there is a query attribute' do
+        config = { name: 'theaters', query: :foo }
+        model = described_class.make(config)
+
+        expect(model).to be_a(Dbee::Model::Derived)
+      end
+    end
   end
 
   describe '#ancestors' do

@@ -34,8 +34,11 @@ module Dbee
     def sql(model, query, provider)
       query = Query.make(query)
       model =
-        if model.is_a?(Hash) || model.is_a?(Model)
+        case model
+        when Hash
           Model.make(model)
+        when Model::Base
+          model
         else
           model.to_model(query.key_chain)
         end
