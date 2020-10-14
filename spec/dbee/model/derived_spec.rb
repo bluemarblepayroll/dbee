@@ -10,9 +10,9 @@
 require 'spec_helper'
 
 describe Dbee::Model::Derived do
-  it 'can be made' do
-    subject = described_class.make(name: 'theaters', query: {})
-    expect(subject).to be_a described_class
+  it 'makes a Dbee::Query' do
+    subject = described_class.make(name: 'theaters', query: { limit: 100 })
+    expect(subject.query).to be_a Dbee::Query
   end
 
   it 'requires a query' do
@@ -23,7 +23,7 @@ describe Dbee::Model::Derived do
 
   it 'does not allow a table' do
     expect do
-      described_class.make(name: 'theaters', table: 'theaters')
+      described_class.make(name: 'theaters', table: 'theaters', query: { limit: 100 })
     end.to raise_error ActsAsHashable::Hashable::HydrationError
   end
 end
