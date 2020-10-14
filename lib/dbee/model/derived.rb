@@ -9,7 +9,19 @@
 
 module Dbee
   class Model
+    # A model which is derived using a subquery.
     class Derived < Dbee::Model::Base
+      attr_reader :query
+
+      def initialize(name:, constraints: [], models: [], partitioners: [], query:)
+        @query = query || raise(ArgumentError, 'a query is required')
+
+        super(name: name, constraints: constraints, models: models, partitioners: partitioners)
+      end
+
+      def ==(other)
+        super && other.query == query
+      end
     end
   end
 end

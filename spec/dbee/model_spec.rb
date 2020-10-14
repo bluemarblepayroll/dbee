@@ -20,22 +20,6 @@ describe Dbee::Model do
       expect(model.name).to eq(config[:name])
     end
 
-    specify 'table defaults to name' do
-      config = { name: 'theaters' }
-
-      model = described_class.make(config)
-
-      expect(model.table).to eq(config[:name])
-    end
-
-    specify 'table can be explicitly set' do
-      config = { name: 'favorite_comedy_movies', table: 'movies' }
-
-      model = described_class.make(config)
-
-      expect(model.table).to eq(config[:table])
-    end
-
     specify 'models are set properly' do
       config = {
         name: 'theaters',
@@ -63,7 +47,7 @@ describe Dbee::Model do
       end
 
       it 'is derived when the type indicates this' do
-        config = { name: 'theaters', type: :derived }
+        config = { name: 'theaters', type: :derived, query: {} }
         model = described_class.make(config)
 
         expect(model).to be_a(Dbee::Model::Derived)

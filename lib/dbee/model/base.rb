@@ -16,21 +16,20 @@ module Dbee
 
       class ModelNotFoundError < StandardError; end
 
-      attr_reader :constraints, :filters, :name, :partitioners, :table
+      attr_reader :constraints, :filters, :name, :partitioners
 
       def_delegator :models_by_name,  :values,  :models
       def_delegator :models,          :sort,    :sorted_models
       def_delegator :constraints,     :sort,    :sorted_constraints
       def_delegator :partitioners,    :sort,    :sorted_partitioners
 
-      def initialize(name:, constraints: [], models: [], partitioners: [], table: '')
+      def initialize(name:, constraints: [], models: [], partitioners: [])
         raise ArgumentError, 'name is required' if name.to_s.empty?
 
         @name           = name.to_s
         @constraints    = Constraints.array(constraints).uniq
         @models_by_name = name_hash(Model.array(models))
         @partitioners   = Partitioner.array(partitioners).uniq
-        @table          = table.to_s.empty? ? @name : table.to_s
 
         freeze
       end
@@ -65,7 +64,6 @@ module Dbee
       def ==(other)
         other.instance_of?(self.class) &&
           other.name == name &&
-          other.table == table &&
           other.sorted_constraints == sorted_constraints &&
           other.sorted_partitioners == sorted_partitioners &&
           other.sorted_models == sorted_models
