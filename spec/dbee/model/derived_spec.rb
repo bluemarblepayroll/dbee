@@ -10,9 +10,10 @@
 require 'spec_helper'
 
 describe Dbee::Model::Derived do
-  it 'makes a Dbee::Query' do
+  it 'makes a Dbee::Query::Sub' do
+    pending 'This needs to be updated to produce a subquery'
     subject = described_class.make(name: 'theaters', query: { limit: 100 })
-    expect(subject.query).to be_a Dbee::Query
+    expect(subject.query).to be_a Dbee::Query::Sub
   end
 
   it 'requires a query' do

@@ -14,7 +14,9 @@ module Dbee
       attr_reader :query
 
       def initialize(name:, constraints: [], models: [], partitioners: [], query:)
-        @query = Dbee::Query.make(query) || raise(ArgumentError, 'a query is required')
+        raise ArgumentError, 'a query is required' unless query
+
+        @query = Dbee::Query.make(query)
 
         super(name: name, constraints: constraints, models: models, partitioners: partitioners)
       end

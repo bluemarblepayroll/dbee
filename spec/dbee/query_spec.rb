@@ -102,6 +102,20 @@ describe Dbee::Query do
     end
   end
 
+  describe 'sub types' do
+    it 'creates a Dbee::Query::Base by default' do
+      subject = described_class.make
+      expect(subject).to be_a Dbee::Query::Base
+    end
+
+    describe 'when subquery attributes are present' do
+      it 'creates a Dbee::Query::Sub' do
+        subject = described_class.make(name: 'test', model: 'foo', parent_model: 'parent')
+        expect(subject).to be_a Dbee::Query::Sub
+      end
+    end
+  end
+
   describe '#key_chain' do
     it 'should include filter, sorter, and field key_paths' do
       key_paths =
@@ -179,8 +193,8 @@ describe Dbee::Query do
       let(:subject) { described_class.make(outer_query) }
 
       it 'constructs a valid subquery' do
-        expect(subject).to be_a described_class
-        expect(subject.given.first).to be_a_subquery
+        expect(subject).to be_a Dbee::Query::Base
+        expect(subject.given.first).to be_a Dbee::Query::Sub
       end
 
       describe 'given a subquery without a name' do
@@ -263,7 +277,7 @@ describe Dbee::Query do
 
     EXAMPLES.each_pair do |name, query|
       specify name do
-        expect(described_class.make(query)).to be_a(described_class)
+        expect(described_class.make(query)).to be_a(Dbee::Query::Base)
       end
     end
   end
