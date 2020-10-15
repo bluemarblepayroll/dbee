@@ -17,6 +17,7 @@ module Dbee
   # Top-level factory that allows for the making of queries.
   class Query
     acts_as_hashable_factory
+    using ActsAsHashable::HashRefinements
 
     DEFAULT_TYPE = 'base'
     SUBQUERY_TYPE = 'sub'
@@ -30,7 +31,7 @@ module Dbee
       # "make" is overridden from acts_as_hashable_factory so that it can
       # derive the type based on the provided keys.
       def make(spec = {})
-        return spec if spec.is_a?(Dbee::Query::Base)
+        return spec if spec.is_a?(Dbee::Query::Base) || spec.nil?
 
         super spec.merge(type: determine_type(spec))
       end
@@ -38,6 +39,7 @@ module Dbee
       private
 
       def determine_type(spec)
+        spec = spec.symbolize_keys
         return spec[:type] if spec[:type]
 
         Sub::ATTRIBUTES.any? { |attrib| spec.key?(attrib) } ? SUBQUERY_TYPE : DEFAULT_TYPE

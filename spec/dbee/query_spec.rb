@@ -104,8 +104,7 @@ describe Dbee::Query do
 
   describe 'sub types' do
     it 'creates a Dbee::Query::Base by default' do
-      subject = described_class.make
-      expect(subject).to be_a Dbee::Query::Base
+      expect(described_class.make).to be_a Dbee::Query::Base
     end
 
     describe 'when subquery attributes are present' do
@@ -113,6 +112,21 @@ describe Dbee::Query do
         subject = described_class.make(name: 'test', model: 'foo', parent_model: 'parent')
         expect(subject).to be_a Dbee::Query::Sub
       end
+    end
+
+    describe 'when subquery attributes are present as string keys' do
+      it 'creates a Dbee::Query::Sub' do
+        subject = described_class.make(
+          'name' => 'test',
+          'model' => 'foo',
+          'parent_model' => 'parent'
+        )
+        expect(subject).to be_a Dbee::Query::Sub
+      end
+    end
+
+    it 'returns nil when given nil' do
+      expect(described_class.make(nil)).to be_nil
     end
   end
 
