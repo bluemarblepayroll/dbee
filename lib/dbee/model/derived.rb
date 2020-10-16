@@ -13,16 +13,37 @@ module Dbee
     class Derived < Dbee::Model::Base
       attr_reader :query
 
-      def initialize(name:, constraints: [], models: [], partitioners: [], query:)
+      # TODO: deal with this
+      # rubocop:disable Metrics/ParameterLists
+      def initialize(name:, constraints: [], models: [], parent: nil, partitioners: [], query:)
+        # rubocop:enable Metrics/ParameterLists
         raise ArgumentError, 'a query is required' unless query
 
-        @query = Dbee::Query.make(query)
+        super(
+          name: name,
+          constraints: constraints,
+          models: models,
+          parent: parent,
+          partitioners: partitioners
+        )
 
-        super(name: name, constraints: constraints, models: models, partitioners: partitioners)
+        @query = Dbee::Query::Sub.make(query.merge(subquery_attributes))
+
+        freeze
       end
 
       def ==(other)
         super && other.query == query
+      end
+
+      private
+
+      def subquery_attributes
+        {
+          name: name,
+          parent_model: parent&.name,
+          constraints: constraints
+        }
       end
     end
   end

@@ -13,10 +13,21 @@ module Dbee
     class TableBased < Dbee::Model::Base
       attr_reader :table
 
-      def initialize(name:, constraints: [], models: [], partitioners: [], table: '')
+      # TODO: deal with this
+      # rubocop:disable Metrics/ParameterLists
+      def initialize(name:, constraints: [], models: [], partitioners: [], table: '', parent: nil)
+        # rubocop:enable Metrics/ParameterLists
         @table = table.to_s.empty? ? name : table.to_s
 
-        super(name: name, constraints: constraints, models: models, partitioners: partitioners)
+        super(
+          name: name,
+          constraints: constraints,
+          models: models,
+          parent: parent,
+          partitioners: partitioners
+        )
+
+        freeze
       end
 
       def ==(other)

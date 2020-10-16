@@ -57,8 +57,9 @@ module Dbee
         raise ArgumentError, 'a name is required for subqueries' if name.nil?
         # Required for derived models:
         raise ArgumentError, 'a model is required for subqueries' if model.nil?
+
         # This can be generated from the derived model:
-        raise ArgumentError, 'a parent_model is required for subqueries' if parent_model.nil?
+        # raise ArgumentError, 'a parent_model is required for subqueries' if parent_model.nil?
 
         # This could be passed in from the derived model:
         @constraints = Model::Constraints.array(attrs[:constraints])

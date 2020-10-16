@@ -47,14 +47,15 @@ describe Dbee::Model do
       end
 
       it 'is derived when the type indicates this' do
-        config = { name: 'theaters', type: :derived, query: { limit: 42 } }
+        config = { name: 'theaters', type: :derived, query: { model: :sub_model, limit: 42 } }
         model = described_class.make(config)
 
         expect(model).to be_a(Dbee::Model::Derived)
       end
 
-      # Not sure if acts_as_hashable_factory can support this...
-      pending 'is derived when there is a query attribute' do
+      it 'is derived when there is a query attribute' do
+        pending 'this requires a custom make method'
+
         config = { name: 'theaters', query: :foo }
         model = described_class.make(config)
 
@@ -63,39 +64,47 @@ describe Dbee::Model do
     end
   end
 
-  describe '#ancestors' do
+  describe 'the hierarchy' do
     let(:yaml_entities) { yaml_fixture('models.yaml') }
-
     let(:entity_hash) { yaml_entities['Theaters, Members, and Movies'] }
-
     subject { described_class.make(entity_hash) }
 
-    specify 'returns proper models' do
-      members = subject.models.first
-
-      expected_plan = {
-        %w[members] => members
-      }
-
-      plan = subject.ancestors!(%w[members])
-
-      expect(plan).to eq(expected_plan)
+    describe 'navigation' do
+      it "is possible to retrieve a model's children and children point back to their parent" do
+        first_child = subject.models.first
+        expect(first_child.name).to eq('members')
+        expect(first_child.parent).to eq subject
+      end
     end
 
-    specify 'returns proper multi-level models' do
-      members       = subject.models.first
-      demos         = members.models.first
-      phone_numbers = demos.models.first
+    describe '#ancestors' do
+      it 'returns proper models' do
+        members = subject.models.first
 
-      expected_plan = {
-        %w[members] => members,
-        %w[members demos] => demos,
-        %w[members demos phone_numbers] => phone_numbers
-      }
+        expected_plan = {
+          %w[members] => members
+        }
 
-      plan = subject.ancestors!(%w[members demos phone_numbers])
+        plan = subject.ancestors!(%w[members])
 
-      expect(plan).to eq(expected_plan)
+        expect(plan).to eq(expected_plan)
+      end
+
+      specify 'returns proper multi-level models' do
+        members       = subject.models.first
+        demos         = members.models.first
+        phone_numbers = demos.models.first
+
+        expected_plan = {
+          %w[members] => members,
+          %w[members demos] => demos,
+          %w[members demos phone_numbers] => phone_numbers
+        }
+
+        plan = subject.ancestors!(%w[members demos phone_numbers])
+
+        expect(plan).to eq(expected_plan)
+      end
     end
   end
 

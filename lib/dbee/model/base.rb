@@ -16,22 +16,21 @@ module Dbee
 
       class ModelNotFoundError < StandardError; end
 
-      attr_reader :constraints, :filters, :name, :partitioners
+      attr_reader :constraints, :filters, :name, :parent, :partitioners
 
       def_delegator :models_by_name,  :values,  :models
       def_delegator :models,          :sort,    :sorted_models
       def_delegator :constraints,     :sort,    :sorted_constraints
       def_delegator :partitioners,    :sort,    :sorted_partitioners
 
-      def initialize(name:, constraints: [], models: [], partitioners: [])
+      def initialize(name:, constraints: [], models: [], partitioners: [], parent: nil)
         raise ArgumentError, 'name is required' if name.to_s.empty?
 
         @name           = name.to_s
         @constraints    = Constraints.array(constraints).uniq
-        @models_by_name = name_hash(Model.array(models))
+        @models_by_name = name_hash(make_sub_models(models))
+        @parent         = parent
         @partitioners   = Partitioner.array(partitioners).uniq
-
-        freeze
       end
 
       # This recursive method will walk a path of model names (parts) and return back a
@@ -85,6 +84,10 @@ module Dbee
 
       def name_hash(array)
         array.map { |a| [a.name, a] }.to_h
+      end
+
+      def make_sub_models(models)
+        Array(models).map { |model_spec| Model.make(model_spec.merge(parent: self)) }
       end
     end
   end

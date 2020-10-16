@@ -28,16 +28,21 @@ module Dbee
       # of a Query.  This is not true for configuration-first Model definitions because, in that
       # case, cycles do not exist since the nature of the configuration is flat.
       def to_model(key_chain, name = nil, constraints = [], path_parts = [])
+        Model.make(to_model_specification(key_chain, name, constraints, path_parts))
+      end
+
+      # Identical to to_model except that it returns the data structure of
+      # hashes and arrays instead of the Dbee::Model. This is helpful so that
+      # Model.make can handle the parent reference.
+      def to_model_specification(key_chain, name = nil, constraints = [], path_parts = []) # :nodoc:
         derived_name  = name.to_s.empty? ? inflected_class_name(self.name) : name.to_s
         key           = [key_chain, derived_name, constraints, path_parts]
 
-        to_models[key] ||= Model.make(
-          model_config(
-            key_chain,
-            derived_name,
-            constraints,
-            path_parts + [name]
-          )
+        to_models[key] ||= model_config(
+          key_chain,
+          derived_name,
+          constraints,
+          path_parts + [name]
         )
       end
 
@@ -75,7 +80,7 @@ module Dbee
                               .map do |association|
           model_constant = association.model_constant
 
-          model_constant.to_model(
+          model_constant.to_model_specification(
             key_chain,
             association.name,
             association.constraints,
