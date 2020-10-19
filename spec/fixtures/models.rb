@@ -7,6 +7,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+require 'date'
+
 module Models
   class Movie < Dbee::Base; end
 
@@ -46,8 +48,8 @@ module Models
     table 'theaters'
 
     parent :parent_theater, model: self
-
     child :member_derived_tests
+    child :member_derived_callable_tests
   end
 
   class MemberDerivedTest < Dbee::Base
@@ -58,6 +60,22 @@ module Models
               { key_path: :members_column }
             ]
           })
+  end
+
+  class MemberDerivedCallableTest < Dbee::Base
+    query(lambda do
+      {
+        model: 'theaters.members',
+        filters: [
+          {
+            key_path: :date_column,
+            type: :less_than_or_equal_to,
+            # Invoke some Ruby code:
+            value: Date.parse('2021-01-01').strftime('%Y-%m-%d')
+          }
+        ]
+      }
+    end)
   end
 
   class A < Dbee::Base

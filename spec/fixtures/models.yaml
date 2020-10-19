@@ -142,6 +142,30 @@ Theaters with a Derived Model:
           parent: id
           name: theater_id
 
+Theaters with a Derived Model with a Callable Query:
+  name: theater
+  table: theaters
+  models:
+    - name: members
+      table: members
+      constraints:
+        - parent: id
+          name: tid
+        - parent: partition
+          name: partition
+    - name: member_derived_callable_tests
+      type: derived
+      query:
+        model: theaters.members
+        filters:
+        - key_path: date_column
+          type: less_than_or_equal_to
+          value: '2021-01-01'
+      constraints:
+        - type: reference
+          parent: id
+          name: theater_id
+
 Readme:
   name: practice
   table: practices

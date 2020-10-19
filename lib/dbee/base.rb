@@ -66,23 +66,21 @@ module Dbee
       private
 
       def model_config(key_chain, name, constraints, path_parts)
-        base_spec = {
+        {
           constraints: constraints,
           models: associations(key_chain, path_parts),
           name: name,
           partitioners: inherited_partitioners
+        }.merge(extended_model_config)
+      end
+
+      def extended_model_config
+        return { table: inherited_table_name } unless query_spec
+
+        {
+          query: query_spec.respond_to?(:call) ? query_spec.call : query_spec,
+          type: :derived
         }
-
-        extended_spec = if query_spec
-                          {
-                            query: query_spec,
-                            type: :derived
-                          }
-                        else
-                          { table: inherited_table_name }
-                        end
-
-        base_spec.merge(extended_spec)
       end
 
       def associations(key_chain, path_parts)

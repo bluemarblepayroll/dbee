@@ -38,21 +38,40 @@ describe Dbee::Base do
       expect(actual_model).to eq(expected_model)
     end
 
-    it 'compiles correctly with a derived model' do
-      model_name      = 'Theaters with a Derived Model'
-      expected_config = yaml_fixture('models.yaml')[model_name]
+    describe 'with a derived model' do
+      it 'compiles correctly' do
+        model_name      = 'Theaters with a Derived Model'
+        expected_config = yaml_fixture('models.yaml')[model_name]
 
-      expected_model = Dbee::Model.make(expected_config)
+        expected_model = Dbee::Model.make(expected_config)
 
-      key_paths = %w[
-        members.foo
-        member_derived_tests.members_column
-      ]
-      key_chain = Dbee::KeyChain.new(key_paths)
+        key_paths = %w[
+          members.foo
+          member_derived_tests.members_column
+        ]
+        key_chain = Dbee::KeyChain.new(key_paths)
 
-      actual_model = Models::Theater.to_model(key_chain)
+        actual_model = Models::Theater.to_model(key_chain)
 
-      expect(actual_model).to eq(expected_model)
+        expect(actual_model).to eq(expected_model)
+      end
+
+      it 'compiles correctly when the query is a callable' do
+        model_name      = 'Theaters with a Derived Model with a Callable Query'
+        expected_config = yaml_fixture('models.yaml')[model_name]
+
+        expected_model = Dbee::Model.make(expected_config)
+
+        key_paths = %w[
+          members.foo
+          member_derived_callable_tests.members_column
+        ]
+        key_chain = Dbee::KeyChain.new(key_paths)
+
+        actual_model = Models::Theater.to_model(key_chain)
+
+        expect(actual_model).to eq(expected_model)
+      end
     end
 
     it 'honors key_chain to flatten cyclic references' do
