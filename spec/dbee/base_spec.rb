@@ -38,6 +38,23 @@ describe Dbee::Base do
       expect(actual_model).to eq(expected_model)
     end
 
+    it 'compiles correctly with a derived model' do
+      model_name      = 'Theaters with a Derived Model'
+      expected_config = yaml_fixture('models.yaml')[model_name]
+
+      expected_model = Dbee::Model.make(expected_config)
+
+      key_paths = %w[
+        members.foo
+        member_derived_tests.members_column
+      ]
+      key_chain = Dbee::KeyChain.new(key_paths)
+
+      actual_model = Models::Theater.to_model(key_chain)
+
+      expect(actual_model).to eq(expected_model)
+    end
+
     it 'honors key_chain to flatten cyclic references' do
       model_name      = 'Cycle Example'
       expected_config = yaml_fixture('models.yaml')[model_name]
@@ -100,4 +117,6 @@ describe Dbee::Base do
       expect(actual_model).to eq(expected_model)
     end
   end
+
+  it 'raises an error if a model has both a query and a table'
 end

@@ -11,12 +11,18 @@ module Dbee
   module Dsl
     # This mixin contains all the reader/writers for model meta-data declared through the DSL.
     module Methods
+      attr_reader :query_spec
+
       def partitioner(name, value)
         partitioners << { name: name, value: value }
       end
 
       def table(name)
         tap { @table_name = name.to_s }
+      end
+
+      def query(spec)
+        tap { @query_spec = spec }
       end
 
       def parent(name, opts = {})

@@ -141,6 +141,8 @@ describe Dbee::Query do
 
       expect(subject.key_chain).to eq(expected_key_chain)
     end
+
+    it 'should include filter, sorter, and field key_paths from subqueries'
   end
 
   describe 'nesting/subqueries' do

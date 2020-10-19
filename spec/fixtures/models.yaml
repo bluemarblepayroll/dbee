@@ -119,6 +119,29 @@ Theaters, Members, and Movies:
                 - type: static
                   name: genre
                   value: comedy
+
+Theaters with a Derived Model:
+  name: theater
+  table: theaters
+  models:
+    - name: members
+      table: members
+      constraints:
+        - parent: id
+          name: tid
+        - parent: partition
+          name: partition
+    - name: member_derived_tests
+      type: derived
+      query:
+        model: theaters.members
+        fields:
+          - key_path: members_column
+      constraints:
+        - type: reference
+          parent: id
+          name: theater_id
+
 Readme:
   name: practice
   table: practices

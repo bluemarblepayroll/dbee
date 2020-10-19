@@ -33,7 +33,8 @@ module Dbee
       end
 
       def ==(other)
-        super && other.query == query
+        # TODO: add deep query equality:
+        super && other.query.name == query.name
       end
 
       private

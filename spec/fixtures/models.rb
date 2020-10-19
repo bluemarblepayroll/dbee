@@ -46,6 +46,18 @@ module Models
     table 'theaters'
 
     parent :parent_theater, model: self
+
+    child :member_derived_tests
+  end
+
+  class MemberDerivedTest < Dbee::Base
+    query({
+            # allow model to be a class reference?
+            model: 'theaters.members',
+            fields: [
+              { key_path: :members_column }
+            ]
+          })
   end
 
   class A < Dbee::Base
