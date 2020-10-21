@@ -23,6 +23,10 @@ describe Dbee::Model::Derived do
   end
 
   describe 'subquery creation' do
+    it 'allows for a query to be an instance of Dbee::Query::Sub'
+    # In which case it will create a new instance of Dbee::Query::Sub with
+    # the overridden attributes from the model.
+
     describe 'for a root model' do
       it "populates the subquery's name" do
         model_spec = {
@@ -35,8 +39,6 @@ describe Dbee::Model::Derived do
         expect(query).to be_a Dbee::Query::Sub
         expect(query.name).to eq model_spec[:name]
       end
-
-      it 'requires that the query is a hash'
     end
 
     describe 'when not the root model' do
