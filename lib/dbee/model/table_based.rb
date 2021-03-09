@@ -85,7 +85,6 @@ module Dbee
       end
 
       def initialize_legacy_tree_based_model_attributes(params)
-        # Exists for backward compatibility with tree based models:
         @constraints    = Constraints.array(params[:constraints] || []).uniq
         @models_by_name = name_hash(Model.array(params[:models]))
 
