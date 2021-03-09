@@ -13,11 +13,15 @@ require 'forwardable'
 
 require_relative 'dbee/base'
 require_relative 'dbee/constant_resolver'
+require_relative 'dbee/dsl_schema_builder'
 require_relative 'dbee/key_chain'
 require_relative 'dbee/key_path'
 require_relative 'dbee/model'
-require_relative 'dbee/query'
 require_relative 'dbee/providers'
+require_relative 'dbee/query'
+require_relative 'dbee/schema'
+require_relative 'dbee/schema_creator'
+require_relative 'dbee/schema_from_tree_based_model'
 
 # Top-level namespace that provides the main public API.
 module Dbee
@@ -31,19 +35,11 @@ module Dbee
       @inflector ||= Dry::Inflector.new
     end
 
-    def sql(model, query, provider)
-      query = Query.make(query)
-      model =
-        case model
-        when Hash
-          Model.make(model)
-        when Model::Base
-          model
-        else
-          model.to_model(query.key_chain)
-        end
+    def sql(schema_or_model, query_input, provider)
+      raise ArgumentError, 'a provider is required' unless provider
 
-      provider.sql(model, query)
+      schema_compat = SchemaCreator.new(schema_or_model, query_input)
+      provider.sql(schema_compat.schema, schema_compat.query)
     end
   end
 end

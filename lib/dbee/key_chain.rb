@@ -38,5 +38,16 @@ module Dbee
 
       ancestor_path_set.include?(path)
     end
+
+    # Returns a unique set of ancestors by considering all column names to be the same.
+    def to_unique_ancestors # :nodoc:
+      normalized_paths = key_path_set.map do |kp|
+        KeyPath.new((kp.ancestor_names + COLUMN_PLACEHOLDER).join(KeyPath::SPLIT_CHAR))
+      end
+      self.class.new(normalized_paths.uniq)
+    end
+
+    COLUMN_PLACEHOLDER = ['any_column'].freeze
+    private_constant :COLUMN_PLACEHOLDER
   end
 end

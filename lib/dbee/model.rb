@@ -11,12 +11,15 @@ require_relative 'model/base'
 require_relative 'model/constraints'
 require_relative 'model/derived'
 require_relative 'model/partitioner'
+require_relative 'model/relationships'
 require_relative 'model/table_based'
+require_relative 'util/make_keyed_by'
 
 module Dbee
   # Top-level factory that allows for the making of models.
   class Model
     acts_as_hashable_factory
+    extend Dbee::Util::MakeKeyedBy
 
     register 'derived',     Dbee::Model::Derived
     register 'table_based', Dbee::Model::TableBased

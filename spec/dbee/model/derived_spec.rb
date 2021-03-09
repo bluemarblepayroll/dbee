@@ -40,43 +40,5 @@ describe Dbee::Model::Derived do
         expect(query.name).to eq model_spec[:name]
       end
     end
-
-    describe 'when not the root model' do
-      let(:derived_model_spec) do
-        {
-          type: :derived,
-          name: 'derived_model',
-          constraints: [
-            {
-              type: :reference,
-              parent: :id,
-              name: :root_table_id
-            }
-          ],
-          query: { limit: 10, model: 'other_model' }
-        }
-      end
-      let(:model_spec) do
-        {
-          name: 'root_model',
-          table: 'root_table',
-          models: [derived_model_spec]
-        }.freeze
-      end
-      let(:root_model) { Dbee::Model.make(model_spec) }
-      subject { root_model.models.first }
-      let(:query) { subject.query }
-
-      it "sets the subquery's parent model" do
-        expect(query).to be_a Dbee::Query::Sub
-        expect(query.parent_model).to eq 'root_model'
-      end
-
-      it 'copies down the constraint to the subquery' do
-        expect(query).to be_a Dbee::Query::Sub
-        constraints = query.constraints
-        expect(constraints).to eq Dbee::Model::Constraints.array(derived_model_spec[:constraints])
-      end
-    end
   end
 end

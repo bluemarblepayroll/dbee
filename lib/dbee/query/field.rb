@@ -26,12 +26,7 @@ module Dbee
 
       attr_reader :aggregator, :display, :filters, :key_path
 
-      def initialize(
-        aggregator: nil,
-        display: nil,
-        filters: [],
-        key_path:
-      )
+      def initialize(key_path:, aggregator: nil, display: nil, filters: [])
         raise ArgumentError, 'key_path is required' if key_path.to_s.empty?
 
         @aggregator = aggregator ? Aggregator.const_get(aggregator.to_s.upcase.to_sym) : nil

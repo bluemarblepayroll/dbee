@@ -15,13 +15,15 @@ module Dbee
       extend Forwardable
       acts_as_hashable
 
-      ATTRIBUTES = %i[model name parent_model].freeze
+      ATTRIBUTES = %i[name relationships].freeze
       attr_reader(*ATTRIBUTES)
 
       def initialize(attrs)
         populate_and_validate_subquery_attrs(attrs)
 
+        # TODO: handle these params like is done in the "Model::Derived" subclass.
         super(
+          from: attrs[:from],
           fields: attrs[:fields],
           filters: attrs[:filters],
           limit: attrs[:limit],
@@ -33,10 +35,7 @@ module Dbee
       end
 
       def ==(other)
-        super &&
-          other.model == model &&
-          other.name == name &&
-          other.parent_model == parent_model
+        super && other.relationships == relationships
       end
       alias eql? ==
 
@@ -49,20 +48,14 @@ module Dbee
       attr_reader :parent
 
       def populate_and_validate_subquery_attrs(attrs)
-        @name = attrs[:name]
-        @model = attrs[:model]
-        @parent_model = attrs[:parent_model]
+        @name = attrs[:name].to_s
 
         # This should be generated from the derived model name:
-        raise ArgumentError, 'a name is required for subqueries' if name.nil?
-        # Required for derived models:
-        raise ArgumentError, 'a model is required for subqueries' if model.nil?
+        raise ArgumentError, 'a name is required for subqueries' if name.empty?
 
-        # This can be generated from the derived model:
-        # raise ArgumentError, 'a parent_model is required for subqueries' if parent_model.nil?
-
-        # This could be passed in from the derived model:
-        @constraints = Model::Constraints.array(attrs[:constraints])
+        @relationships = Dbee::Model::Relationships.make_keyed_by(
+          :name, attrs[:relationships] || {}
+        )
       end
     end
   end

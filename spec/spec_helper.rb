@@ -9,6 +9,13 @@
 
 require 'yaml'
 require 'pry'
+require 'pry-byebug'
+
+RSpec.configure do |config|
+  # Allow for disabling auto focus mode in certain environments like CI to
+  # prevent false positives when only a subset of the suite passes.
+  config.filter_run_when_matching :focus unless ENV['DISABLE_RSPEC_FOCUS'] == 'true'
+end
 
 RSpec.configure do |config|
   # Allow for disabling auto focus mode in certain environments like CI to

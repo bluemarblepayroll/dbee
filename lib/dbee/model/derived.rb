@@ -6,45 +6,33 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 #
+require_relative '../util/make_keyed_by'
 
 module Dbee
   class Model
     # A model which is derived using a subquery.
     class Derived < Dbee::Model::Base
+      extend Dbee::Util::MakeKeyedBy
+
       attr_reader :query
 
-      # TODO: deal with this
-      # rubocop:disable Metrics/ParameterLists
-      def initialize(name:, constraints: [], models: [], parent: nil, partitioners: [], query:)
-        # rubocop:enable Metrics/ParameterLists
+      def initialize(params)
+        query = params[:query]
         raise ArgumentError, 'a query is required' unless query
 
-        super(
-          name: name,
-          constraints: constraints,
-          models: models,
-          parent: parent,
-          partitioners: partitioners
-        )
+        @query = Dbee::Query::Sub.make(query.merge(name: params[:name]))
 
-        @query = Dbee::Query::Sub.make(query.merge(subquery_attributes))
-
-        freeze
+        super params.reject { |key, _| key == :query }
       end
 
       def ==(other)
         # TODO: add deep query equality:
         super && other.query.name == query.name
       end
+      alias eql? ==
 
-      private
-
-      def subquery_attributes
-        {
-          name: name,
-          parent_model: parent&.name,
-          constraints: constraints
-        }
+      def hash
+        [super, query.hash].hash
       end
     end
   end

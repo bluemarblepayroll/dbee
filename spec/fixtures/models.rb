@@ -55,7 +55,7 @@ module Models
   class MemberDerivedTest < Dbee::Base
     query({
             # allow model to be a class reference?
-            model: 'theaters.members',
+            from: 'member',
             fields: [
               { key_path: :members_column }
             ]
@@ -65,7 +65,7 @@ module Models
   class MemberDerivedCallableTest < Dbee::Base
     query(lambda do
       {
-        model: 'theaters.members',
+        from: 'member',
         filters: [
           {
             key_path: :date_column,

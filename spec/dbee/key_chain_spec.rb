@@ -78,4 +78,28 @@ describe Dbee::KeyChain do
       end
     end
   end
+
+  describe '#to_unique_ancestors collapses the KeyChain' do
+    let(:collapsed_key_chain) do
+      described_class.new([
+                            'z.b.c.d.any_column',
+                            'b.c.any_column',
+                            'any_column',
+                            '44.55.any_column'
+                          ])
+    end
+
+    specify 'the empty case' do
+      expect(described_class.new.to_unique_ancestors).to eq described_class.new
+    end
+
+    specify 'when there are no ancestors, one key path is returned' do
+      no_query_depth = described_class.new(%w[column1 column2 column3])
+      expect(no_query_depth.to_unique_ancestors).to eq described_class.new(['any_column'])
+    end
+
+    it 'returns a new KeyChain which has one KeyPath per ancestor' do
+      expect(subject.to_unique_ancestors).to eq collapsed_key_chain
+    end
+  end
 end

@@ -37,7 +37,9 @@ Gem::Specification.new do |s|
   s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake', '~> 13')
   s.add_development_dependency('rspec')
-  s.add_development_dependency('rubocop', '~>0.89.1')
+  s.add_development_dependency('rubocop', '~> 1')
+  s.add_development_dependency('rubocop-rake')
+  s.add_development_dependency('rubocop-rspec')
   s.add_development_dependency('simplecov', '~>0.19.0')
   s.add_development_dependency('simplecov-console', '~>0.7.0')
 end

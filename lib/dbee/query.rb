@@ -19,6 +19,12 @@ module Dbee
     acts_as_hashable_factory
     using ActsAsHashable::HashRefinements
 
+    attr_reader :fields,
+                :filters,
+                :from,
+                :limit,
+                :sorters
+
     DEFAULT_TYPE = 'base'
     SUBQUERY_TYPE = 'sub'
     private_constant :DEFAULT_TYPE, :SUBQUERY_TYPE

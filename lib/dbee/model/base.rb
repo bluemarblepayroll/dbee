@@ -8,64 +8,36 @@
 #
 module Dbee
   class Model
-    # In DB terms, a Model is usually a table, but it does not have to be.  You can also re-model
-    # your DB schema using Dbee::Models.
+    # A common base class for different types of data models.
     class Base
       extend Forwardable
       acts_as_hashable
 
       class ModelNotFoundError < StandardError; end
 
-      attr_reader :constraints, :filters, :name, :parent, :partitioners
+      attr_reader :constraints, :name, :partitioners, :relationships
 
-      def_delegator :models_by_name,  :values,  :models
-      def_delegator :models,          :sort,    :sorted_models
-      def_delegator :constraints,     :sort,    :sorted_constraints
-      def_delegator :partitioners,    :sort,    :sorted_partitioners
+      def_delegator :partitioners, :sort, :sorted_partitioners
 
-      def initialize(name:, constraints: [], models: [], partitioners: [], parent: nil)
+      def initialize(name:, relationships: [], partitioners: [])
         raise ArgumentError, 'name is required' if name.to_s.empty?
 
         @name           = name.to_s
-        @constraints    = Constraints.array(constraints).uniq
-        @models_by_name = name_hash(make_sub_models(models))
-        @parent         = parent
+        @relationships  = Relationships.make_keyed_by(:name, relationships)
         @partitioners   = Partitioner.array(partitioners).uniq
+
+        freeze
       end
 
-      # This recursive method will walk a path of model names (parts) and return back a
-      # flattened hash instead of a nested object structure.
-      # The hash key will be an array of strings (model names) and the value will be the
-      # identified model.
-      #
-      # Note that this method ends in a bang because it can raise a
-      # `ModelNotFoundError` exception if the model is not found. This method
-      # does not mutate any data.
-      def ancestors!(parts = [], visited_parts = [], found = {})
-        return found if Array(parts).empty?
-
-        # Take the first entry in parts
-        model_name = parts.first.to_s
-
-        # Ensure we have it registered as a child, or raise error
-        model = assert_model(model_name, visited_parts)
-
-        # Push onto visited list
-        visited_parts += [model_name]
-
-        # Add found model to flattened structure
-        found[visited_parts] = model
-
-        # Recursively call for next parts in the chain
-        model.ancestors!(parts[1..-1], visited_parts, found)
+      def relationship_for_name(relationship_name)
+        relationships[relationship_name]
       end
 
       def ==(other)
         other.instance_of?(self.class) &&
           other.name == name &&
-          other.sorted_constraints == sorted_constraints &&
-          other.sorted_partitioners == sorted_partitioners &&
-          other.sorted_models == sorted_models
+          other.relationships == relationships &&
+          other.sorted_partitioners == sorted_partitioners
       end
       alias eql? ==
 
@@ -73,21 +45,12 @@ module Dbee
         name <=> other.name
       end
 
-      private
-
-      attr_reader :models_by_name
-
-      def assert_model(model_name, visited_parts)
-        models_by_name[model_name] ||
-          raise(ModelNotFoundError, "Missing: #{model_name}, after: #{visited_parts}")
+      def hash
+        [name.hash, relationships.hash, sorted_partitioners.hash].hash
       end
 
-      def name_hash(array)
-        array.map { |a| [a.name, a] }.to_h
-      end
-
-      def make_sub_models(models)
-        Array(models).map { |model_spec| Model.make(model_spec.merge(parent: self)) }
+      def to_s
+        name
       end
     end
   end

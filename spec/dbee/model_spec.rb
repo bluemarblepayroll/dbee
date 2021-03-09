@@ -64,85 +64,116 @@ describe Dbee::Model do
     end
   end
 
-  describe 'the hierarchy' do
+  describe '.make_keyed_by' do
+    it 'returns a hash of Models where the keys equal the names of the models' do
+      input = {
+        model1: nil,
+        model2: { table: :model2_table }
+      }
+      expected_result = {
+        'model1' => described_class.make(name: 'model1'),
+        'model2' => described_class.make(name: 'model2', table: 'model2_table')
+      }
+
+      expect(described_class.make_keyed_by(:name, input)).to eq expected_result
+    end
+
+    it 'accepts values of Dbee::Model instances' do
+      input = { model1: described_class.make(name: :model1) }
+      expected_result = { 'model1' => described_class.make(name: :model1) }
+      expect(described_class.make_keyed_by(:name, input)).to eq expected_result
+    end
+
+    it 'accepts values of Dbee::Model instances when the key attribute is a string' do
+      input = { 'model1' => described_class.make(name: 'model1') }
+      expected_result = { 'model1' => described_class.make(name: 'model1') }
+      expect(described_class.make_keyed_by(:name, input)).to eq expected_result
+    end
+
+    it 'raises an error when the input hash key is not equal to the name of the model' do
+      input = { model1: described_class.make(name: :bogus) }
+      expect do
+        described_class.make_keyed_by(:name, input)
+      end.to raise_error ArgumentError, "expected a name of 'model1' but got 'bogus'"
+    end
+  end
+
+  describe '#to_s' do
+    it 'is represented by the model name' do
+      expect(described_class.make(name: 'foo').to_s).to eq 'foo'
+    end
+  end
+
+  describe '#ancestors!' do
     let(:yaml_entities) { yaml_fixture('models.yaml') }
-    let(:entity_hash) { yaml_entities['Theaters, Members, and Movies'] }
+    let(:entity_hash) { yaml_entities['Theaters, Members, and Movies Tree Based'] }
+
     subject { described_class.make(entity_hash) }
 
-    describe 'navigation' do
-      it "is possible to retrieve a model's children and children point back to their parent" do
-        first_child = subject.models.first
-        expect(first_child.name).to eq('members')
-        expect(first_child.parent).to eq subject
-      end
+    it 'returns proper models' do
+      members = subject.models.first
+
+      expected_plan = {
+        %w[members] => members
+      }
+
+      plan = subject.ancestors!(%w[members])
+
+      expect(plan).to eq(expected_plan)
     end
 
-    describe '#ancestors' do
-      it 'returns proper models' do
-        members = subject.models.first
+    specify 'returns proper multi-level models' do
+      members       = subject.models.first
+      demos         = members.models.first
+      phone_numbers = demos.models.first
 
-        expected_plan = {
-          %w[members] => members
-        }
+      expected_plan = {
+        %w[members] => members,
+        %w[members demos] => demos,
+        %w[members demos phone_numbers] => phone_numbers
+      }
 
-        plan = subject.ancestors!(%w[members])
+      plan = subject.ancestors!(%w[members demos phone_numbers])
 
-        expect(plan).to eq(expected_plan)
-      end
-
-      specify 'returns proper multi-level models' do
-        members       = subject.models.first
-        demos         = members.models.first
-        phone_numbers = demos.models.first
-
-        expected_plan = {
-          %w[members] => members,
-          %w[members demos] => demos,
-          %w[members demos phone_numbers] => phone_numbers
-        }
-
-        plan = subject.ancestors!(%w[members demos phone_numbers])
-
-        expect(plan).to eq(expected_plan)
-      end
+      expect(plan).to eq(expected_plan)
     end
   end
 
-  describe 'equality' do
-    let(:config) { yaml_fixture('models.yaml')['Theaters, Members, and Movies'] }
+  equality_cases = {
+    tree_based: yaml_fixture('models.yaml')['Theaters, Members, and Movies Tree Based'],
+    graph_based: yaml_fixture('models.yaml')['Theaters, Members, and Movies from DSL']['theater']
+  }
+  equality_cases[:graph_based].merge!(name: 'theaters')
 
-    subject { described_class.make(config) }
+  equality_cases.each do |test_case, config|
+    describe "equality for #{test_case}" do
+      let(:model1) { described_class.make(config) }
+      let(:model2) { described_class.make(config) }
 
-    specify 'equality compares attributes' do
-      model1 = described_class.make(config)
-      model2 = described_class.make(config)
+      subject { described_class.make(config) }
 
-      expect(model1).to eq(model2)
-      expect(model1).to eql(model2)
-    end
+      specify 'equality compares attributes' do
+        expect(model1).to eq(model2)
+        expect(model1).to eql(model2)
+      end
 
-    it 'returns false unless comparing same object types' do
-      expect(subject).not_to eq(config)
-      expect(subject).not_to eq(nil)
-    end
-  end
+      it 'returns false unless comparing same object types' do
+        expect(subject).not_to eq(config)
+        expect(subject).not_to eq(nil)
+      end
 
-  context 'README examples' do
-    specify 'code-first and configuration-first models are equal' do
-      config        = yaml_fixture('models.yaml')['Readme']
-      config_model  = described_class.make(config)
+      describe 'hash codes' do
+        specify 'are equal when objects are equal' do
+          expect(model1).to eq(model2)
+          expect(model1.hash).to eq(model2.hash)
+        end
 
-      key_chain = Dbee::KeyChain.new(%w[
-                                       patients.a
-                                       patients.notes.b
-                                       patients.work_phone_number.c
-                                       patients.cell_phone_number.d
-                                       patients.fax_phone_number.e
-                                     ])
-
-      code_model = ReadmeDataModels::Practice.to_model(key_chain)
-
-      expect(config_model).to eq(code_model)
+        specify 'are not equal when objects are not equal' do
+          different_model = described_class.make(name: :oddball)
+          expect(model1).not_to eq(different_model)
+          expect(model1.hash).not_to eq(different_model.hash)
+        end
+      end
     end
   end
 end

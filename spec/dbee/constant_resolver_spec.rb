@@ -9,23 +9,28 @@
 
 require 'spec_helper'
 
-describe Dbee::ConstantResolver do
-  module A
-    class B; end
-    class E; end
-  end
-
+# rubocop:disable Lint/EmptyClass
+# These are intentionally empty to keep the tests focused.
+module A
   class B; end
 
-  module C
-    class D; end
-    class E; end
+  class E; end
+end
 
-    module F
-      class G; end
-    end
+class B; end
+
+module C
+  class D; end
+
+  class E; end
+
+  module F
+    class G; end
   end
+end
+# rubocop:enable Lint/EmptyClass
 
+describe Dbee::ConstantResolver do
   it 'resolves nested constant with the same as an ancestor constants sibling' do
     expect(subject.constantize('A::B')).to eq(::A::B)
   end

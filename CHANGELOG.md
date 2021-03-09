@@ -1,3 +1,12 @@
+# 3.0.0 (TBD)
+
+### Additions
+
+* Support for graph based models. This paves the way for representing more advanced features, such as sub-queries in a more clear way. Since graph based models are similar to DSL models, the hope is that they will be easier to work with and understand.
+
+### Breaking Changes
+
+* The `to_model` method on `Dbee::Base` objects has been removed. Use `to_schema` instead.
 # 2.1.1 (July 14th, 2020)
 
 * Removed guard that ensured a query has at least one field to establish a more rational base-case.

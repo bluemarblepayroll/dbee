@@ -9,9 +9,63 @@
 
 require 'spec_helper'
 
+README_EXAMPLES = {
+  'Get all practices' => {
+    fields: [
+      { key_path: 'id' },
+      { key_path: 'active' },
+      { key_path: 'name' }
+    ]
+  },
+  'Get all practices, limit to 10, and sort by name (descending) then id (ascending)' => {
+    fields: [
+      { key_path: 'id' },
+      { key_path: 'active' },
+      { key_path: 'name' }
+    ],
+    sorters: [
+      { key_path: 'name', direction: :descending },
+      { key_path: 'id' }
+    ],
+    limit: 10
+  },
+  "Get top 5 active practices and patient whose name start with 'Sm':" => {
+    fields: [
+      { key_path: 'name', display: 'Practice Name' },
+      { key_path: 'patients.first', display: 'Patient First Name' },
+      { key_path: 'patients.middle', display: 'Patient Middle Name' },
+      { key_path: 'patients.last', display: 'Patient Last Name' }
+    ],
+    filters: [
+      { type: :equals, key_path: 'active', value: true },
+      { type: :starts_with, key_path: 'patients.last', value: 'Sm' }
+    ],
+    limit: 5
+  },
+  'Get practice IDs, patient IDs, names, and cell phone numbers that starts with 555' => {
+    fields: [
+      { key_path: 'id', display: 'Practice ID #' },
+      { key_path: 'patients.id', display: 'Patient ID #' },
+      { key_path: 'patients.first', display: 'Patient First Name' },
+      { key_path: 'patients.middle', display: 'Patient Middle Name' },
+      { key_path: 'patients.last', display: 'Patient Last Name' },
+      { key_path: 'patients.cell_phone_numbers.phone_number', display: 'Patient Cell #' }
+    ],
+    filters: [
+      { type: :equals, key_path: 'active', value: true },
+      {
+        type: :starts_with,
+        key_path: 'patients.cell_phone_numbers.phone_number',
+        value: '555'
+      }
+    ]
+  }
+}.freeze
+
 describe Dbee::Query do
   let(:config) do
     {
+      from: 'my_model',
       fields: [
         { key_path: 'matt.nick.sam', display: 'some display' },
         { key_path: 'katie' },
@@ -145,9 +199,19 @@ describe Dbee::Query do
     it 'should include filter, sorter, and field key_paths from subqueries'
   end
 
+  # TODO: move this to the subquery spec
   describe 'nesting/subqueries' do
     describe 'given three levels of queries' do
-      let(:subquery_constraint) { { name: :outer_id, parent: :id, type: :reference } }
+      let(:subquery_relationships) do
+        {
+          foo: {
+            name: 'foo',
+            constraints: [
+              { name: :outer_id, parent: :id, type: :reference }
+            ]
+          }
+        }
+      end
       let(:outer_query) do
         {
           given: [inner_query1, inner_query2],
@@ -157,26 +221,23 @@ describe Dbee::Query do
       let(:inner_query1) do
         {
           name: :inner_query1,
-          model: :foo,
-          parent_model: :parent,
+          from: :foo,
           fields: [{ key_path: :inner1_field }]
         }
       end
       let(:inner_query2) do
         {
-          given: [third_level_query],
-          model: :foo,
-          parent_model: :parent,
           name: :inner_query2,
-          constraints: [subquery_constraint],
+          given: [third_level_query],
+          from: :foo,
+          relationships: subquery_relationships,
           fields: [{ key_path: :inner2_field }]
         }
       end
       let(:third_level_query) do
         {
           name: :third_level_query,
-          model: :foo,
-          parent_model: :bar,
+          from: :foo,
           fields: [{ key_path: :third_level_field }]
         }
       end
@@ -185,20 +246,22 @@ describe Dbee::Query do
 
       it 'exposes subqueries through the "given" method' do
         expect(second_level_queries.size).to eq 2
-        expect(second_level_queries[0].name).to eq :inner_query1
-        expect(second_level_queries[1].name).to eq :inner_query2
+        expect(second_level_queries[0].name).to eq 'inner_query1'
+        expect(second_level_queries[1].name).to eq 'inner_query2'
 
         third_level_queries = second_level_queries[1].given
-        expect(third_level_queries[0].name).to eq :third_level_query
+        expect(third_level_queries[0].name).to eq 'third_level_query'
         # The tree ends here:
         expect(third_level_queries[0].given).to eq []
       end
 
       it 'populates all of the subquery fields' do
         subquery = second_level_queries[1]
-        expect(subquery.name).to eq(:inner_query2)
-        expect(subquery.model).to eq(:foo)
-        expect(subquery.constraints).to eq [Dbee::Model::Constraints.make(subquery_constraint)]
+        expect(subquery.name).to eq 'inner_query2'
+        expect(subquery.from).to eq 'foo'
+        expect(subquery.relationships).to eq(
+          'foo' => Dbee::Model::Relationships.make(subquery_relationships[:foo])
+        )
       end
     end
 
@@ -223,75 +286,11 @@ describe Dbee::Query do
           )
         end
       end
-
-      describe 'given a subquery without a model' do
-        let(:subquery) { valid_subquery.merge(model: nil) }
-
-        it 'raises an error' do
-          expect { subject }.to raise_error(
-            ActsAsHashable::Hashable::HydrationError,
-            /model is required for subqueries/
-          )
-        end
-      end
     end
   end
 
-  context 'README examples do not produce errors' do
-    EXAMPLES = {
-      'Get all practices' => {
-        fields: [
-          { key_path: 'id' },
-          { key_path: 'active' },
-          { key_path: 'name' }
-        ]
-      },
-      'Get all practices, limit to 10, and sort by name (descending) then id (ascending)' => {
-        fields: [
-          { key_path: 'id' },
-          { key_path: 'active' },
-          { key_path: 'name' }
-        ],
-        sorters: [
-          { key_path: 'name', direction: :descending },
-          { key_path: 'id' }
-        ],
-        limit: 10
-      },
-      "Get top 5 active practices and patient whose name start with 'Sm':" => {
-        fields: [
-          { key_path: 'name', display: 'Practice Name' },
-          { key_path: 'patients.first', display: 'Patient First Name' },
-          { key_path: 'patients.middle', display: 'Patient Middle Name' },
-          { key_path: 'patients.last', display: 'Patient Last Name' }
-        ],
-        filters: [
-          { type: :equals, key_path: 'active', value: true },
-          { type: :starts_with, key_path: 'patients.last', value: 'Sm' }
-        ],
-        limit: 5
-      },
-      'Get practice IDs, patient IDs, names, and cell phone numbers that starts with 555' => {
-        fields: [
-          { key_path: 'id', display: 'Practice ID #' },
-          { key_path: 'patients.id', display: 'Patient ID #' },
-          { key_path: 'patients.first', display: 'Patient First Name' },
-          { key_path: 'patients.middle', display: 'Patient Middle Name' },
-          { key_path: 'patients.last', display: 'Patient Last Name' },
-          { key_path: 'patients.cell_phone_numbers.phone_number', display: 'Patient Cell #' }
-        ],
-        filters: [
-          { type: :equals, key_path: 'active', value: true },
-          {
-            type: :starts_with,
-            key_path: 'patients.cell_phone_numbers.phone_number',
-            value: '555'
-          }
-        ]
-      }
-    }.freeze
-
-    EXAMPLES.each_pair do |name, query|
+  context 'README examples' do
+    README_EXAMPLES.each_pair do |name, query|
       specify name do
         expect(described_class.make(query)).to be_a(Dbee::Query::Base)
       end

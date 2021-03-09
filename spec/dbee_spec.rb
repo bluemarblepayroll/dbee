@@ -13,59 +13,39 @@ require 'fixtures/models'
 describe Dbee do
   describe '#sql' do
     let(:provider) { Dbee::Providers::NullProvider.new }
-
-    let(:model_hash) do
-      {
-        name: 'something'
-      }
-    end
-
-    let(:model) { Dbee::Model.make(model_hash) }
-
     let(:query_hash) do
       {
+        from: 'my_model',
         fields: [
           { key_path: :a }
         ]
       }
     end
-
     let(:query) { Dbee::Query.make(query_hash) }
+    let(:schema) { Dbee::Schema.new({}) }
 
-    it 'accepts a hash as a model and passes a Model instance to provider#sql' do
-      expect(provider).to receive(:sql).with(model, query)
+    it 'accepts a query hash and a Schema and passes them into provider#sql' do
+      expect(provider).to receive(:sql).with(schema, query)
 
-      described_class.sql(model_hash, query, provider)
+      described_class.sql(schema, query_hash, provider)
     end
 
-    it 'accepts a Dbee::Model instance as a model and passes a Model instance to provider#sql' do
-      expect(provider).to receive(:sql).with(model, query)
-
-      described_class.sql(model, query, provider)
+    it 'does not allow a nil schema' do
+      expect do
+        described_class.sql(nil, query, provider)
+      end.to raise_error ArgumentError, /schema or model is required/
     end
 
-    it 'accepts a Dbee::Base constant as a model and passes a Model instance to provider#sql' do
-      model_constant = Models::Theater
-
-      expect(provider).to receive(:sql).with(model_constant.to_model(query.key_chain), query)
-
-      described_class.sql(model_constant, query, provider)
+    it 'does not allow a nil query' do
+      expect do
+        described_class.sql(schema, nil, provider)
+      end.to raise_error ArgumentError, /query is required/
     end
 
-    it 'accepts a Dbee::Query instance as a query and passes a Query instance to provider#sql' do
-      model = Models::Theater.to_model(query.key_chain)
-
-      expect(provider).to receive(:sql).with(model, query)
-
-      described_class.sql(model, query, provider)
-    end
-
-    it 'accepts a hash as a query and passes a Query instance to provider#sql' do
-      model = Models::Theater.to_model(query.key_chain)
-
-      expect(provider).to receive(:sql).with(model, query)
-
-      described_class.sql(model, query_hash, provider)
+    it 'does not allow a nil provider' do
+      expect do
+        described_class.sql(schema, query, nil)
+      end.to raise_error ArgumentError, /provider is required/
     end
   end
 end
