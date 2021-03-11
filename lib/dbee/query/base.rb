@@ -78,7 +78,7 @@ module Dbee
       end
 
       def populate_given(given)
-        @given = Array(given).map { |query_spec| Dbee::Query.make(query_spec.merge(parent: self)) }
+        @given = Array(given).map { |query_spec| Dbee::Query.make(query_spec) }
       end
     end
   end

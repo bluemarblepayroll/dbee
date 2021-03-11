@@ -20,7 +20,13 @@ module Dbee
         query = params[:query]
         raise ArgumentError, 'a query is required' unless query
 
-        @query = Dbee::Query::Sub.make(query.merge(name: params[:name]))
+        # TODO: raise an error if the query already has a name and it is
+        # different from this model's name
+        @query = if query.is_a?(Dbee::Query::Sub)
+                   query
+                 else
+                   Dbee::Query::Sub.make(query.merge(name: params[:name]))
+                 end
 
         super params.reject { |key, _| key == :query }
       end

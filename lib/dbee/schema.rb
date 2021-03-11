@@ -46,7 +46,11 @@ module Dbee
     end
 
     def model_for_name!(model_name)
-      models_by_name[model_name.to_s] || raise(Model::ModelNotFoundError, model_name)
+      model_for_name(model_name) || raise(Model::ModelNotFoundError, model_name)
+    end
+
+    def model_for_name(model_name)
+      models_by_name[model_name.to_s]
     end
 
     def ==(other)

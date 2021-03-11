@@ -23,15 +23,19 @@ describe Dbee::Model::Derived do
   end
 
   describe 'subquery creation' do
-    it 'allows for a query to be an instance of Dbee::Query::Sub'
-    # In which case it will create a new instance of Dbee::Query::Sub with
-    # the overridden attributes from the model.
+    let(:query_spec) { { limit: 10, from: 'subquery_model' } }
+
+    it 'allows for a query to be an instance of Dbee::Query::Sub' do
+      subquery = Dbee::Query::Sub.make(query_spec.merge(name: 'foo'))
+      subject = described_class.make(name: 'foo', query: subquery)
+      expect(subject.query).to eq subquery
+    end
 
     describe 'for a root model' do
       it "populates the subquery's name" do
         model_spec = {
           name: 'test_name',
-          query: { limit: 10, model: 'subquery_model' }
+          query: query_spec
         }.freeze
         subject = described_class.make(model_spec)
 

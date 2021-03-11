@@ -47,7 +47,7 @@ describe Dbee::Model do
       end
 
       it 'is derived when the type indicates this' do
-        config = { name: 'theaters', type: :derived, query: { model: :sub_model, limit: 42 } }
+        config = { name: 'theaters', type: :derived, query: { from: :sub_model, limit: 42 } }
         model = described_class.make(config)
 
         expect(model).to be_a(Dbee::Model::Derived)

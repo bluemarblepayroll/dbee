@@ -21,6 +21,8 @@ module Dbee
     acts_as_hashable_factory
     extend Dbee::Util::MakeKeyedBy
 
+    class ModelNotFoundError < StandardError; end
+
     register 'derived',     Dbee::Model::Derived
     register 'table_based', Dbee::Model::TableBased
     register '',            Dbee::Model::TableBased # default

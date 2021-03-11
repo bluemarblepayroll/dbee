@@ -13,8 +13,6 @@ module Dbee
       extend Forwardable
       acts_as_hashable
 
-      class ModelNotFoundError < StandardError; end
-
       attr_reader :constraints, :name, :partitioners, :relationships
 
       def_delegator :partitioners, :sort, :sorted_partitioners

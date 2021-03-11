@@ -15,27 +15,21 @@ module Dbee
       extend Forwardable
       acts_as_hashable
 
-      ATTRIBUTES = %i[name relationships].freeze
+      ATTRIBUTES = %i[name relationships relationships_from].freeze
       attr_reader(*ATTRIBUTES)
 
       def initialize(attrs)
         populate_and_validate_subquery_attrs(attrs)
 
-        # TODO: handle these params like is done in the "Model::Derived" subclass.
-        super(
-          from: attrs[:from],
-          fields: attrs[:fields],
-          filters: attrs[:filters],
-          limit: attrs[:limit],
-          sorters: attrs[:sorters],
-          given: attrs[:given]
-        )
+        super attrs.reject { |key, _| ATTRIBUTES.include?(key) }
 
         freeze
       end
 
       def ==(other)
-        super && other.relationships == relationships
+        super &&
+          other.relationships == relationships &&
+          other.relationships_from == relationships_from
       end
       alias eql? ==
 
@@ -45,17 +39,18 @@ module Dbee
 
       private
 
-      attr_reader :parent
-
       def populate_and_validate_subquery_attrs(attrs)
         @name = attrs[:name].to_s
 
         # This should be generated from the derived model name:
         raise ArgumentError, 'a name is required for subqueries' if name.empty?
 
-        @relationships = Dbee::Model::Relationships.make_keyed_by(
-          :name, attrs[:relationships] || {}
-        )
+        @relationships      = make_relationships(attrs[:relationships])
+        @relationships_from = make_relationships(attrs[:relationships_from])
+      end
+
+      def make_relationships(relationship_hash)
+        Dbee::Model::Relationships.make_keyed_by(:name, relationship_hash || {})
       end
     end
   end

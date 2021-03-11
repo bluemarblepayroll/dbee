@@ -163,7 +163,7 @@ describe Dbee::Query do
 
     describe 'when subquery attributes are present' do
       it 'creates a Dbee::Query::Sub' do
-        subject = described_class.make(name: 'test', model: 'foo', parent_model: 'parent')
+        subject = described_class.make(name: 'test', from: 'foo', relationships: {})
         expect(subject).to be_a Dbee::Query::Sub
       end
     end
@@ -172,8 +172,8 @@ describe Dbee::Query do
       it 'creates a Dbee::Query::Sub' do
         subject = described_class.make(
           'name' => 'test',
-          'model' => 'foo',
-          'parent_model' => 'parent'
+          'from' => 'foo',
+          'relationships' => {}
         )
         expect(subject).to be_a Dbee::Query::Sub
       end
@@ -197,96 +197,6 @@ describe Dbee::Query do
     end
 
     it 'should include filter, sorter, and field key_paths from subqueries'
-  end
-
-  # TODO: move this to the subquery spec
-  describe 'nesting/subqueries' do
-    describe 'given three levels of queries' do
-      let(:subquery_relationships) do
-        {
-          foo: {
-            name: 'foo',
-            constraints: [
-              { name: :outer_id, parent: :id, type: :reference }
-            ]
-          }
-        }
-      end
-      let(:outer_query) do
-        {
-          given: [inner_query1, inner_query2],
-          fields: [{ key_path: :outer_field }]
-        }
-      end
-      let(:inner_query1) do
-        {
-          name: :inner_query1,
-          from: :foo,
-          fields: [{ key_path: :inner1_field }]
-        }
-      end
-      let(:inner_query2) do
-        {
-          name: :inner_query2,
-          given: [third_level_query],
-          from: :foo,
-          relationships: subquery_relationships,
-          fields: [{ key_path: :inner2_field }]
-        }
-      end
-      let(:third_level_query) do
-        {
-          name: :third_level_query,
-          from: :foo,
-          fields: [{ key_path: :third_level_field }]
-        }
-      end
-      let(:subject) { described_class.make(outer_query) }
-      let(:second_level_queries) { subject.given }
-
-      it 'exposes subqueries through the "given" method' do
-        expect(second_level_queries.size).to eq 2
-        expect(second_level_queries[0].name).to eq 'inner_query1'
-        expect(second_level_queries[1].name).to eq 'inner_query2'
-
-        third_level_queries = second_level_queries[1].given
-        expect(third_level_queries[0].name).to eq 'third_level_query'
-        # The tree ends here:
-        expect(third_level_queries[0].given).to eq []
-      end
-
-      it 'populates all of the subquery fields' do
-        subquery = second_level_queries[1]
-        expect(subquery.name).to eq 'inner_query2'
-        expect(subquery.from).to eq 'foo'
-        expect(subquery.relationships).to eq(
-          'foo' => Dbee::Model::Relationships.make(subquery_relationships[:foo])
-        )
-      end
-    end
-
-    describe 'subquery validation' do
-      let(:valid_subquery) { { name: :third_level_query, model: :foo, parent_model: :bar } }
-      let(:subquery) { valid_subquery }
-      let(:outer_query) { { given: [subquery] } }
-      let(:subject) { described_class.make(outer_query) }
-
-      it 'constructs a valid subquery' do
-        expect(subject).to be_a Dbee::Query::Base
-        expect(subject.given.first).to be_a Dbee::Query::Sub
-      end
-
-      describe 'given a subquery without a name' do
-        let(:subquery) { valid_subquery.merge(name: nil) }
-
-        it 'raises an error' do
-          expect { subject }.to raise_error(
-            ActsAsHashable::Hashable::HydrationError,
-            /name is required for subqueries/
-          )
-        end
-      end
-    end
   end
 
   context 'README examples' do
