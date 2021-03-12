@@ -30,18 +30,22 @@ module Dbee
     # string ancestor names.
     #
     # An exception is raised of the provided key_path contains relationship
-    # names that do not exist in this schema.
-    def expand_query_path(model, key_path, query_path = [])
+    # names that do not exist in this schema. However, an optional callback
+    # block can be provided as a fallback in case the relationship can not be
+    # found. TODO: document this more fully.
+    def expand_query_path(model, key_path, query_path = [], &fallback)
       ancestors = key_path.respond_to?(:ancestor_names) ? key_path.ancestor_names : key_path
       relationship_name = ancestors.first
       return query_path unless relationship_name
 
-      relationship = relationship_for_name!(model, relationship_name)
-      join_model = model_for_name!(relationship.model_name)
+      relationship, join_model = resolve_relationship!(
+        model, relationship_name, fallback || EMPTY_FALLBACK
+      )
       expand_query_path(
         join_model,
         ancestors.drop(1),
-        query_path + [[relationship_for_name!(model, relationship_name), join_model]]
+        query_path + [[relationship, join_model]],
+        &fallback
       )
     end
 
@@ -62,9 +66,17 @@ module Dbee
 
     attr_reader :models_by_name
 
-    def relationship_for_name!(model, rel_name)
-      model.relationship_for_name(rel_name) ||
-        raise("model '#{model.name}' does not have a '#{rel_name}' relationship")
+    EMPTY_FALLBACK = ->(_model, _relationship_name) { [] }
+    private_constant :EMPTY_FALLBACK
+
+    def resolve_relationship!(model, rel_name, fallback)
+      relationship = model.relationship_for_name(rel_name)
+      return [relationship, model_for_name!(relationship.model_name)] if relationship
+
+      relationship, join_model = fallback.call(model, rel_name)
+      raise("model '#{model.name}' does not have a '#{rel_name}' relationship") unless relationship
+
+      [relationship, join_model]
     end
   end
 end

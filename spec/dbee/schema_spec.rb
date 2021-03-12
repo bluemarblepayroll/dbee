@@ -53,10 +53,46 @@ describe Dbee::Schema do
       ).to eq expected_path
     end
 
-    it 'raises an error given an unknown relationship' do
-      expect do
-        subject.expand_query_path(theaters_model, Dbee::KeyPath.new('demographics.id'))
-      end.to raise_error("model 'theater' does not have a 'demographics' relationship")
+    describe 'when given an unknown relationship' do
+      it 'raises an error' do
+        expect do
+          subject.expand_query_path(theaters_model, Dbee::KeyPath.new('demographics.id'))
+        end.to raise_error("model 'theater' does not have a 'demographics' relationship")
+      end
+
+      it 'falls back to the optional block' do
+        custom_model = Dbee::Model.make(name: 'custom_model')
+        custom_relationship = Dbee::Model::Relationships.make(name: 'custom')
+        phone_numbers_relationship = Dbee::Model::Relationships.make(name: 'phone_numbers')
+
+        expected_path = [
+          [custom_relationship, custom_model],
+          [phone_numbers_relationship, phone_numbers_model]
+        ]
+
+        found_path = subject.expand_query_path(
+          members_model, Dbee::KeyPath.new('custom.phone_numbers.id')
+        ) do |_model, relationship_name|
+          case relationship_name
+          when 'custom'
+            [custom_relationship, custom_model]
+          when 'phone_numbers'
+            [phone_numbers_relationship, phone_numbers_model]
+          else
+            []
+          end
+        end
+
+        expect(found_path).to eq expected_path
+      end
+
+      it 'raises an error when the optional block can not resolve the relationship' do
+        expect do
+          subject.expand_query_path(
+            theaters_model, Dbee::KeyPath.new('demographics.id')
+          ) { |_, _| [] }
+        end.to raise_error("model 'theater' does not have a 'demographics' relationship")
+      end
     end
   end
 end
