@@ -13,8 +13,11 @@ module Dbee
     # A model which is derived using a subquery.
     class Derived < Dbee::Model::Base
       extend Dbee::Util::MakeKeyedBy
+      extend Forwardable
 
       attr_reader :query
+
+      def_delegators :query, :relationships_from
 
       def initialize(params)
         query = params[:query]
